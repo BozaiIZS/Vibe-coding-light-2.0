@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+codex_status.json
+dynamic_island_config.json
+*.log
+codex_status_hook.log

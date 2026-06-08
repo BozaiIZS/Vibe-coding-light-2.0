@@ -1,0 +1,41 @@
+# Copy these hook blocks into your Codex config, then run /hooks and trust them.
+# Replace <PYTHON_EXE> with your Python interpreter path.
+# Replace <PROJECT_DIR> with the absolute path of this project.
+
+[[hooks.UserPromptSubmit]]
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = '<PYTHON_EXE> <PROJECT_DIR>\.codex\hooks\codex_status_hook.py UserPromptSubmit'
+timeout = 5
+statusMessage = "Codex status light: working"
+
+[[hooks.PreToolUse]]
+matcher = ".*"
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = '<PYTHON_EXE> <PROJECT_DIR>\.codex\hooks\codex_status_hook.py PreToolUse'
+timeout = 5
+statusMessage = "Codex status light: working"
+
+[[hooks.PermissionRequest]]
+matcher = ".*"
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = '<PYTHON_EXE> <PROJECT_DIR>\.codex\hooks\codex_status_hook.py PermissionRequest'
+timeout = 5
+statusMessage = "Codex status light: waiting"
+
+[[hooks.Stop]]
+[[hooks.Stop.hooks]]
+type = "command"
+command = '<PYTHON_EXE> <PROJECT_DIR>\.codex\hooks\codex_status_hook.py Stop'
+timeout = 5
+statusMessage = "Codex status light: done"
+
+[[hooks.SubagentStop]]
+matcher = ".*"
+[[hooks.SubagentStop.hooks]]
+type = "command"
+command = '<PYTHON_EXE> <PROJECT_DIR>\.codex\hooks\codex_status_hook.py SubagentStop'
+timeout = 5
+statusMessage = "Codex status light: subagent done"
