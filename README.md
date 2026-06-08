@@ -8,6 +8,8 @@
 - 红灯：等待用户决策
 - 绿灯：任务已完成
 - 灰灯：待命
+<img width="474" height="130" alt="image" src="https://github.com/user-attachments/assets/988b7768-ce8d-4f80-905f-6218c6048b42" />
+<img width="211" height="75" alt="image" src="https://github.com/user-attachments/assets/2304d597-903d-4b6a-92a6-9268e3ec6483" />
 
 ## 功能
 
