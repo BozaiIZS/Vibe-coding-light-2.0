@@ -14,12 +14,15 @@ if PYQT5_QT_BIN.exists():
     os.environ["PATH"] = f"{PYQT5_QT_BIN}{os.pathsep}{os.environ.get('PATH', '')}"
 
 from PyQt5.QtCore import QEasingCurve, QPoint, QPointF, QPropertyAnimation, QRect, QSize, Qt, QTimer, pyqtProperty
-from PyQt5.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient
+from PyQt5.QtGui import QColor, QFont, QIcon, QPainter, QPen, QRadialGradient
 from PyQt5.QtWidgets import (
+    QAction,
     QApplication,
     QFrame,
     QLabel,
+    QMenu,
     QPushButton,
+    QSystemTrayIcon,
     QWidget,
 )
 
@@ -27,6 +30,7 @@ from PyQt5.QtWidgets import (
 APP_DIR = Path(__file__).resolve().parent
 STATE_FILE = APP_DIR / "codex_status.json"
 CONFIG_FILE = APP_DIR / "dynamic_island_config.json"
+ICON_CANDIDATES = (APP_DIR / "app.ico", APP_DIR / "app.png")
 
 
 @dataclass(frozen=True)
@@ -45,7 +49,7 @@ THEMES = {
 }
 
 DEFAULT_STATE = {"status": "idle", "message": "Codex 待命", "updated_at": 0, "source": "manual"}
-DEFAULT_CONFIG = {"topmost": True, "expanded": True, "x": None, "y": None}
+DEFAULT_CONFIG = {"topmost": True, "expanded": True, "show_in_taskbar": True, "x": None, "y": None}
 
 
 class IslandPanel(QFrame):
@@ -146,6 +150,13 @@ def save_json(path: Path, value: dict[str, Any]) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def load_app_icon() -> QIcon:
+    for icon_path in ICON_CANDIDATES:
+        if icon_path.exists():
+            return QIcon(str(icon_path))
+    return QIcon()
+
+
 class DynamicIsland(QWidget):
     EXPANDED_SIZE = QSize(468, 124)
     COMPACT_SIZE = QSize(190, 58)
@@ -160,12 +171,14 @@ class DynamicIsland(QWidget):
         self.status = self.normalize_status(self.state.get("status"))
         self.expanded = bool(self.config["expanded"])
         self.topmost = bool(self.config["topmost"])
+        self.show_in_taskbar = bool(self.config["show_in_taskbar"])
         self.drag_offset = QPoint()
         self.animating = False
         self.animation_target_expanded: bool | None = None
         self.animation: QPropertyAnimation | None = None
         self.content_visible_during_animation = True
         self.current_island_size = QSize(self.EXPANDED_SIZE if self.expanded else self.COMPACT_SIZE)
+        self.exit_requested = False
 
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setStyleSheet("background: transparent;")
@@ -230,11 +243,40 @@ class DynamicIsland(QWidget):
         flags = Qt.FramelessWindowHint
         if self.topmost:
             flags |= Qt.WindowStaysOnTopHint
+        if not self.show_in_taskbar:
+            flags |= Qt.Tool
         return flags
 
     def showEvent(self, event) -> None:  # type: ignore[override]
         super().showEvent(event)
         QTimer.singleShot(0, self.refresh_styles)
+
+    def closeEvent(self, event) -> None:  # type: ignore[override]
+        if self.exit_requested:
+            event.accept()
+            return
+        event.ignore()
+        self.hide()
+
+    def show_from_tray(self) -> None:
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def quit_from_tray(self) -> None:
+        self.exit_requested = True
+        QApplication.quit()
+
+    def set_taskbar_visible(self, visible: bool) -> None:
+        self.show_in_taskbar = visible
+        self.config["show_in_taskbar"] = self.show_in_taskbar
+        save_json(CONFIG_FILE, self.config)
+        pos = self.pos()
+        was_visible = self.isVisible()
+        self.setWindowFlags(self.build_flags())
+        self.move(pos)
+        if was_visible:
+            self.show_from_tray()
 
     def resize_to_state(self, initial: bool = False) -> None:
         self.setFixedSize(self.padded_window_size(self.EXPANDED_SIZE))
@@ -575,8 +617,37 @@ def main() -> int:
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
     app = QApplication(sys.argv)
-    app.setQuitOnLastWindowClosed(True)
+    app.setQuitOnLastWindowClosed(False)
+    app_icon = load_app_icon()
+    app.setWindowIcon(app_icon)
     window = DynamicIsland()
+    window.setWindowTitle("Codex Status Light")
+
+    tray = QSystemTrayIcon(app_icon, app)
+    tray.setToolTip("Codex Status Light")
+
+    tray_menu = QMenu()
+    show_action = QAction("显示", tray_menu)
+    taskbar_action = QAction("任务栏显示图标", tray_menu)
+    taskbar_action.setCheckable(True)
+    taskbar_action.setChecked(window.show_in_taskbar)
+    quit_action = QAction("退出", tray_menu)
+    show_action.triggered.connect(window.show_from_tray)
+    taskbar_action.toggled.connect(window.set_taskbar_visible)
+    quit_action.triggered.connect(window.quit_from_tray)
+    tray_menu.addAction(show_action)
+    tray_menu.addAction(taskbar_action)
+    tray_menu.addSeparator()
+    tray_menu.addAction(quit_action)
+    tray.setContextMenu(tray_menu)
+
+    def activate_tray(reason: QSystemTrayIcon.ActivationReason) -> None:
+        if reason == QSystemTrayIcon.DoubleClick:
+            window.show_from_tray()
+
+    tray.activated.connect(activate_tray)
+    tray.show()
+
     window.show()
     return app.exec_()
 
