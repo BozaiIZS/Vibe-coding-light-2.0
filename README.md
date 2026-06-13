@@ -10,6 +10,9 @@
 - 灰灯：待命
 <img width="474" height="130" alt="image" src="https://github.com/user-attachments/assets/988b7768-ce8d-4f80-905f-6218c6048b42" />
 <img width="211" height="75" alt="image" src="https://github.com/user-attachments/assets/2304d597-903d-4b6a-92a6-9268e3ec6483" />
+<img width="470" height="470" alt="6d66e4c36b3ca523cc2e382369180143" src="https://github.com/user-attachments/assets/69572d4f-eb54-4665-977c-d89f1635189f" />
+
+
 ## 功能
 
 - PyQt5 原生窗口，无边框、透明背景、可拖动
