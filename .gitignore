@@ -2,5 +2,9 @@ __pycache__/
 *.pyc
 codex_status.json
 dynamic_island_config.json
+notification_config.json
+notification_state.json
+notification_state.lock
 *.log
 codex_status_hook.log
+codex_notification.log

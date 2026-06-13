@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "provider": "kdeconnect",
+  "kdeconnect": {
+    "cli_path": "kdeconnect-cli",
+    "device_id": ""
+  },
+  "pushplus": {
+    "token": "替换成你的 PushPlus token",
+    "endpoint": "https://www.pushplus.plus/send",
+    "template": "markdown",
+    "channel": "wechat"
+  },
+  "events": {
+    "decision": true,
+    "done": true,
+    "working": false,
+    "idle": false
+  },
+  "min_interval_seconds": 20,
+  "include_context": true
+}
