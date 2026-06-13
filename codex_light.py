@@ -5,6 +5,8 @@ import json
 import time
 from pathlib import Path
 
+from codex_notifier import notify_status
+
 
 APP_DIR = Path(__file__).resolve().parent
 STATE_FILE = APP_DIR / "codex_status.json"
@@ -28,6 +30,7 @@ def write_state(command: str) -> None:
         "event": f"codex-light {command}",
     }
     STATE_FILE.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    notify_status(payload)
 
 
 def read_state() -> str:

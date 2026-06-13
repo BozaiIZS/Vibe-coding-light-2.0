@@ -9,6 +9,11 @@ from typing import Any
 
 
 PROJECT_DIR = Path(__file__).resolve().parents[2]
+if str(PROJECT_DIR) not in sys.path:
+    sys.path.insert(0, str(PROJECT_DIR))
+
+from codex_notifier import notify_status
+
 STATE_FILE = PROJECT_DIR / "codex_status.json"
 LOG_FILE = PROJECT_DIR / "codex_status_hook.log"
 
@@ -80,6 +85,7 @@ def write_state(payload: dict[str, Any]) -> None:
         "tool_name": payload.get("tool_name") or payload.get("toolName"),
     }
     STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    notify_status(state)
     write_log(f"{event_name or 'Unknown'} -> {status}")
 
 

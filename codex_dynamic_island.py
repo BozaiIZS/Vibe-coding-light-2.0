@@ -26,6 +26,8 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+from codex_notifier import is_notification_enabled, set_notification_enabled
+
 
 APP_DIR = Path(__file__).resolve().parent
 STATE_FILE = APP_DIR / "codex_status.json"
@@ -178,6 +180,7 @@ class DynamicIsland(QWidget):
         self.expanded = bool(self.config["expanded"])
         self.topmost = bool(self.config["topmost"])
         self.show_in_taskbar = bool(self.config["show_in_taskbar"])
+        self.notify_phone = is_notification_enabled()
         self.drag_offset = QPoint()
         self.animating = False
         self.animation_target_expanded: bool | None = None
@@ -283,6 +286,10 @@ class DynamicIsland(QWidget):
         self.move(pos)
         if was_visible:
             self.show_from_tray()
+
+    def set_phone_notification_enabled(self, enabled: bool) -> None:
+        self.notify_phone = bool(enabled)
+        set_notification_enabled(self.notify_phone)
 
     def resize_to_state(self, initial: bool = False) -> None:
         self.setFixedSize(self.padded_window_size(self.EXPANDED_SIZE))
@@ -637,12 +644,17 @@ def main() -> int:
     taskbar_action = QAction("任务栏显示图标", tray_menu)
     taskbar_action.setCheckable(True)
     taskbar_action.setChecked(window.show_in_taskbar)
+    notify_phone_action = QAction("通知到手机", tray_menu)
+    notify_phone_action.setCheckable(True)
+    notify_phone_action.setChecked(window.notify_phone)
     quit_action = QAction("退出", tray_menu)
     show_action.triggered.connect(window.show_from_tray)
     taskbar_action.toggled.connect(window.set_taskbar_visible)
+    notify_phone_action.toggled.connect(window.set_phone_notification_enabled)
     quit_action.triggered.connect(window.quit_from_tray)
     tray_menu.addAction(show_action)
     tray_menu.addAction(taskbar_action)
+    tray_menu.addAction(notify_phone_action)
     tray_menu.addSeparator()
     tray_menu.addAction(quit_action)
     tray.setContextMenu(tray_menu)
