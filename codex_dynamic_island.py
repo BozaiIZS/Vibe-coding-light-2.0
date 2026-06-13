@@ -70,11 +70,17 @@ class IslandPanel(QFrame):
         rect = self.rect().adjusted(0, 0, -1, -1)
         radius = max(24, rect.height() / 2)
         accent = QColor(self._accent)
-        accent.setAlpha(26)
+        # 避免低透明度渐变在白色桌面上透出一团白光，影响文字可读性。
+        center_color = QColor(
+            min(255, 18 + accent.red() // 10),
+            min(255, 21 + accent.green() // 10),
+            min(255, 25 + accent.blue() // 10),
+            252,
+        )
 
         gradient = QRadialGradient(QPointF(rect.width() * 0.18, rect.height() * 0.26), max(rect.width(), rect.height()) * 0.72)
-        gradient.setColorAt(0.0, accent)
-        gradient.setColorAt(0.32, QColor(18, 21, 25, 250))
+        gradient.setColorAt(0.0, center_color)
+        gradient.setColorAt(0.42, QColor(14, 16, 20, 252))
         gradient.setColorAt(1.0, QColor(5, 5, 7, 252))
 
         painter.setPen(QPen(QColor(255, 255, 255, 28), 1))
